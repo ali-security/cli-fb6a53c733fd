@@ -6,6 +6,8 @@ on:
 
 jobs:
   check-area-label:
+    # disabled on the seal fork: PR validation not needed for the test gate
+    if: false
     runs-on: ubuntu-20.04
     steps:
       - name: Missing `area/` label
@@ -17,7 +19,8 @@ jobs:
         run: exit 0
 
   check-changelog:
-    if: contains(join(github.event.pull_request.labels.*.name, ','), 'impact/')
+    # disabled on the seal fork: PR validation not needed for the test gate
+    if: false
     runs-on: ubuntu-20.04
     env:
       PR_BODY: |
@@ -46,6 +49,8 @@ jobs:
           echo "$desc"
 
   check-pr-branch:
+    # disabled on the seal fork: PR validation not needed for the test gate
+    if: false
     runs-on: ubuntu-20.04
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}

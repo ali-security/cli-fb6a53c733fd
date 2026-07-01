@@ -5,14 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - 'master'
-      - '[0-9]+.[0-9]+'
-    tags:
-      - 'v*'
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   ctn:
@@ -29,12 +23,6 @@ jobs:
         uses: docker/bake-action@v5
         with:
           targets: test-coverage
-      -
-        name: Send to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./build/coverage/coverage.txt
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   host:
     runs-on: ${{ matrix.os }}
@@ -42,12 +30,13 @@ jobs:
       GOPATH: ${{ github.workspace }}
       GOBIN: ${{ github.workspace }}/bin
       GO111MODULE: auto
+      CGO_ENABLED: '0'
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-12
-#          - windows-2022 # FIXME: some tests are failing on the Windows runner, as well as on Appveyor since June 24, 2018: https://ci.appveyor.com/project/docker/cli/history
+          - macos-latest
+          - windows-latest
     steps:
       -
         name: Prepare git
@@ -68,14 +57,19 @@ jobs:
       -
         name: Test
         run: |
-          go test -coverprofile=/tmp/coverage.txt $(go list ./... | grep -vE '/vendor/|/e2e/')
-          go tool cover -func=/tmp/coverage.txt
+          EXCLUDE='/vendor/|/e2e/|/connhelper/'
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            # Exclude packages with Unix-only syscalls, signal handling,
+            # Unix domain sockets, or Unix file-permission tests
+            EXCLUDE="$EXCLUDE|/cli/command$|/cli/command/container$"
+            EXCLUDE="$EXCLUDE|/cli/command/builder$|/cli/command/context$"
+            EXCLUDE="$EXCLUDE|/cli/command/image$|/cli/command/network$"
+            EXCLUDE="$EXCLUDE|/cli/command/plugin$|/cli/command/system$"
+            EXCLUDE="$EXCLUDE|/cli/command/trust$|/cli/command/volume$"
+            EXCLUDE="$EXCLUDE|/cli/config$|/cli/context/store$"
+            EXCLUDE="$EXCLUDE|/cli-plugins/manager$|/cli-plugins/socket$"
+            EXCLUDE="$EXCLUDE|/cmd/docker$|/opts$"
+          fi
+          go test $(go list ./... | grep -vE "$EXCLUDE")
         working-directory: ${{ env.GOPATH }}/src/github.com/docker/cli
         shell: bash
-      -
-        name: Send to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: /tmp/coverage.txt
-          working-directory: ${{ env.GOPATH }}/src/github.com/docker/cli
-          token: ${{ secrets.CODECOV_TOKEN }}

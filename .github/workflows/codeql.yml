@@ -2,11 +2,11 @@ name: codeql
 
 on:
   push:
-    branches: 
-      - 'master' 
-      - '[0-9]+.[0-9]+' 
-    tags: 
-      - 'v*' 
+    branches:
+      - 'master'
+      - '[0-9]+.[0-9]+'
+    tags:
+      - 'v*'
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "master" ]
@@ -24,6 +24,8 @@ on:
 
 jobs:
   codeql:
+    # disabled on the seal fork: not needed for the test gate
+    if: false
     runs-on: 'ubuntu-latest'
     timeout-minutes: 360
     env:
@@ -32,7 +34,7 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    
+
     steps:
       -
         name: Checkout

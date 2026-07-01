@@ -16,6 +16,8 @@ on:
 
 jobs:
   validate:
+    # disabled on the seal fork: lint/validate not needed for the test gate
+    if: false
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -37,6 +39,8 @@ jobs:
 
   # check that the generated Markdown and the checked-in files match
   validate-md:
+    # disabled on the seal fork: not needed for the test gate
+    if: false
     runs-on: ubuntu-24.04
     steps:
       -
@@ -57,6 +61,8 @@ jobs:
           fi
 
   validate-make:
+    # disabled on the seal fork: not needed for the test gate
+    if: false
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
